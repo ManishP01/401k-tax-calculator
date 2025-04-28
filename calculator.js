@@ -1,5 +1,6 @@
-// Function to calculate taxes and handle RSU income, 401k contributions, and HSA
 function calculateTaxes() {
+    console.log("Calculating taxes..."); // This will log when the button is clicked
+    
     // Get input values
     const grossIncome = parseFloat(document.getElementById("grossIncome").value);
     const rsuIncome = parseFloat(document.getElementById("rsuIncome").value);
@@ -8,6 +9,28 @@ function calculateTaxes() {
     const trad401kPct = parseFloat(document.getElementById("trad401kPct").value) / 100;
     const roth401kPct = parseFloat(document.getElementById("roth401kPct").value) / 100;
     const hsaContribution = parseFloat(document.getElementById("hsaContribution").value);
+
+    // Validate inputs
+    if (isNaN(grossIncome) || grossIncome <= 0) {
+        alert("Please enter a valid Gross Income.");
+        return;
+    }
+    if (isNaN(rsuIncome) || rsuIncome < 0) {
+        alert("Please enter a valid RSU income.");
+        return;
+    }
+    if (isNaN(trad401kPct) || trad401kPct < 0 || trad401kPct > 1) {
+        alert("Please enter a valid Traditional 401k percentage.");
+        return;
+    }
+    if (isNaN(roth401kPct) || roth401kPct < 0 || roth401kPct > 1) {
+        alert("Please enter a valid Roth 401k percentage.");
+        return;
+    }
+    if (isNaN(hsaContribution) || hsaContribution < 0) {
+        alert("Please enter a valid HSA contribution.");
+        return;
+    }
 
     // Calculate adjusted 401k and HSA contribution limits based on age and filing status
     const { max401k } = calculateAdjustedLimits(age);
@@ -36,11 +59,23 @@ function calculateTaxes() {
 
     // Calculate federal tax dynamically using the correct brackets
     const federalTax = calculateFederalTax(taxableIncome, filingStatus);
+    
+    // Check for valid federal tax calculation
+    if (isNaN(federalTax) || federalTax < 0) {
+        alert("There was an error calculating federal tax.");
+        return;
+    }
 
     // Calculate the tax scenario with 100% Traditional 401k contribution (max tax savings in current year)
     const maxTrad401kContribution = Math.min(grossIncome, max401k);
     const maxTradTaxableIncome = totalIncome - maxTrad401kContribution - hsaContribution;
     const maxTradTax = calculateFederalTax(maxTradTaxableIncome, filingStatus);
+
+    // Check for valid maxTraditionalTax calculation
+    if (isNaN(maxTradTax) || maxTradTax < 0) {
+        alert("There was an error calculating the max traditional 401k tax.");
+        return;
+    }
 
     // Calculate the difference in taxes
     const taxDifference = maxTradTax - federalTax;
@@ -68,56 +103,46 @@ function calculateTaxes() {
     `;
 }
 
-// Function to calculate adjusted 401k contribution limits based on age
-function calculateAdjustedLimits(age) {
-    const max401k = (age >= 50) ? 27000 : 23000; // 2025 max 401k limit
-    return { max401k };
-}
-
-// Function to calculate HSA contribution limits based on age and filing status
-function calculateAdjustedHSA(age, filingStatus) {
-    let maxHSA = 0;
-    if (filingStatus === 'single') {
-        maxHSA = (age >= 55) ? 4350 : 3750; // 2025 limits for single
-    } else if (filingStatus === 'married') {
-        maxHSA = (age >= 55) ? 8750 : 7500; // 2025 limits for married filing jointly
-    }
-    return maxHSA;
-}
-
-// Function to calculate federal tax based on filing status
+// Function to calculate federal tax based on tax brackets
 function calculateFederalTax(taxableIncome, filingStatus) {
-    const brackets = getTaxBrackets(filingStatus);
     let tax = 0;
 
-    // Apply each bracket's tax rates
-    for (let i = 0; i < brackets.length; i++) {
-        const [low, high, rate] = brackets[i];
-        if (taxableIncome > low) {
-            const taxableAtBracket = Math.min(taxableIncome, high) - low;
-            tax += taxableAtBracket * rate;
+    // Define the tax brackets for Married Filing Jointly and Single
+    const brackets = {
+        "Married Filing Jointly": [
+            { limit: 22000, rate: 0.10 },
+            { limit: 89450, rate: 0.12 },
+            { limit: 190750, rate: 0.22 },
+            { limit: 364200, rate: 0.24 },
+            { limit: 462500, rate: 0.32 },
+            { limit: 693750, rate: 0.35 },
+            { limit: Infinity, rate: 0.37 }
+        ],
+        "Single": [
+            { limit: 11000, rate: 0.10 },
+            { limit: 44725, rate: 0.12 },
+            { limit: 95375, rate: 0.22 },
+            { limit: 182100, rate: 0.24 },
+            { limit: 231250, rate: 0.32 },
+            { limit: 578100, rate: 0.35 },
+            { limit: Infinity, rate: 0.37 }
+        ]
+    };
+
+    const selectedBrackets = brackets[filingStatus] || brackets["Married Filing Jointly"];
+    let remainingIncome = taxableIncome;
+
+    // Calculate tax based on the taxable income and filing status
+    for (let i = 0; i < selectedBrackets.length; i++) {
+        const bracket = selectedBrackets[i];
+        if (remainingIncome > bracket.limit) {
+            const taxableAtThisRate = Math.min(remainingIncome, bracket.limit);
+            tax += taxableAtThisRate * bracket.rate;
+            remainingIncome -= taxableAtThisRate;
         } else {
             break;
         }
     }
 
     return tax;
-}
-
-// Tax brackets for different filing statuses
-function getTaxBrackets(filingStatus) {
-    if (filingStatus === 'single') {
-        return [
-            [0, 11000, 0.10], [11001, 44725, 0.12], [44726, 95375, 0.22],
-            [95376, 182100, 0.24], [182101, 231250, 0.32], [231251, 578100, 0.35],
-            [578101, Infinity, 0.37]
-        ];
-    } else if (filingStatus === 'married') {
-        return [
-            [0, 22000, 0.10], [22001, 89450, 0.12], [89451, 190750, 0.22],
-            [190751, 364200, 0.24], [364201, 462500, 0.32], [462501, 693750, 0.35],
-            [693751, Infinity, 0.37]
-        ];
-    }
-    return []; // Default case
 }
