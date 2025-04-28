@@ -1,90 +1,111 @@
-function calculateTaxImpact() {
-    const grossIncome = parseFloat(document.getElementById('grossIncome').value) || 0;
-    const rsuIncome = parseFloat(document.getElementById('rsuIncome').value) || 0;
-    const age = parseInt(document.getElementById('age').value) || 0;
-    const traditionalPercent = parseFloat(document.getElementById('traditionalPercent').value) || 0;
-    const rothPercent = parseFloat(document.getElementById('rothPercent').value) || 0;
-    const hsaCoverage = document.getElementById('hsaCoverage').value;
-    const hsaContributionInput = parseFloat(document.getElementById('hsaContribution').value) || 0;
+// calculator.js
 
-    // Combine salary + RSU
-    const totalIncome = grossIncome + rsuIncome;
+// Constants
+const MAX_401K_CONTRIBUTION_UNDER_50 = 23000;
+const MAX_401K_CONTRIBUTION_50_PLUS = 30000; // catch-up contributions allowed
+const MAX_HSA_CONTRIBUTION_SELF = 4150;
+const MAX_HSA_CONTRIBUTION_FAMILY = 8300;
 
-    // 401k contribution limits
-    const max401k = (age >= 50) ? 30000 : 23000; // 2024 limits
+// 2024 Federal tax brackets for Married Filing Jointly
+const FEDERAL_TAX_BRACKETS = [
+  { rate: 0.10, cap: 23200 },
+  { rate: 0.12, cap: 94300 },
+  { rate: 0.22, cap: 201050 },
+  { rate: 0.24, cap: 383900 },
+  { rate: 0.32, cap: 487450 },
+  { rate: 0.35, cap: 731200 },
+  { rate: 0.37, cap: Infinity },
+];
 
-    const total401kPercent = traditionalPercent + rothPercent;
-    let total401kContribution = totalIncome * (total401kPercent / 100);
+// 2024 CT state income tax brackets (simplified)
+const CT_TAX_BRACKETS = [
+  { rate: 0.03, cap: 20000 },
+  { rate: 0.05, cap: 100000 },
+  { rate: 0.055, cap: 200000 },
+  { rate: 0.06, cap: 250000 },
+  { rate: 0.065, cap: 500000 },
+  { rate: 0.069, cap: Infinity },
+];
 
-    if (total401kContribution > max401k) {
-        total401kContribution = max401k;
-    }
+function calculateTaxes() {
+  const grossIncome = parseFloat(document.getElementById("grossIncome").value) || 0;
+  const rsuIncome = parseFloat(document.getElementById("rsuIncome").value) || 0;
+  const trad401kPct = parseFloat(document.getElementById("trad401kPct").value) || 0;
+  const roth401kPct = parseFloat(document.getElementById("roth401kPct").value) || 0;
+  const hsaContribution = parseFloat(document.getElementById("hsaContribution").value) || 0;
 
-    const traditionalContribution = total401kContribution * (traditionalPercent / total401kPercent);
-    const rothContribution = total401kContribution * (rothPercent / total401kPercent);
+  const totalIncome = grossIncome + rsuIncome;
 
-    // HSA contribution limits
-    let maxHSA = 0;
-    if (hsaCoverage === 'individual') {
-        maxHSA = (age >= 55) ? 5150 : 4150;
+  const isOver50 = false; // Add an input if needed later
+  const max401k = isOver50 ? MAX_401K_CONTRIBUTION_50_PLUS : MAX_401K_CONTRIBUTION_UNDER_50;
+
+  let trad401kContribution = (trad401kPct / 100) * grossIncome;
+  let roth401kContribution = (roth401kPct / 100) * grossIncome;
+
+  const total401kContribution = trad401kContribution + roth401kContribution;
+
+  // Enforce 401k limits
+  if (total401kContribution > max401k) {
+    const scalingFactor = max401k / total401kContribution;
+    trad401kContribution *= scalingFactor;
+    roth401kContribution *= scalingFactor;
+  }
+
+  // Calculate taxable income
+  const taxableIncome = totalIncome - trad401kContribution - hsaContribution;
+
+  const federalTaxes = calculateFederalTax(taxableIncome);
+  const ctTaxes = calculateStateTax(taxableIncome);
+
+  const totalTax = federalTaxes + ctTaxes;
+
+  const effectiveTaxRate = (totalTax / totalIncome) * 100;
+
+  const results = `
+    <p><strong>Total Income (Salary + RSUs):</strong> $${totalIncome.toFixed(2)}</p>
+    <p><strong>Traditional 401k Contribution:</strong> $${trad401kContribution.toFixed(2)}</p>
+    <p><strong>Roth 401k Contribution:</strong> $${roth401kContribution.toFixed(2)}</p>
+    <p><strong>HSA Contribution:</strong> $${hsaContribution.toFixed(2)}</p>
+    <p><strong>Taxable Income After Contributions:</strong> $${taxableIncome.toFixed(2)}</p>
+    <p><strong>Federal Taxes:</strong> $${federalTaxes.toFixed(2)}</p>
+    <p><strong>CT State Taxes:</strong> $${ctTaxes.toFixed(2)}</p>
+    <p><strong>Total Taxes:</strong> $${totalTax.toFixed(2)}</p>
+    <p><strong>Effective Tax Rate:</strong> ${effectiveTaxRate.toFixed(2)}%</p>
+  `;
+
+  document.getElementById("results").innerHTML = results;
+}
+
+function calculateFederalTax(income) {
+  let tax = 0;
+  let lastCap = 0;
+
+  for (const bracket of FEDERAL_TAX_BRACKETS) {
+    if (income > bracket.cap) {
+      tax += (bracket.cap - lastCap) * bracket.rate;
+      lastCap = bracket.cap;
     } else {
-        maxHSA = (age >= 55) ? 9300 : 8300;
+      tax += (income - lastCap) * bracket.rate;
+      break;
     }
+  }
 
-    let hsaContribution = hsaContributionInput || maxHSA;
-    if (hsaContribution > maxHSA) {
-        hsaContribution = maxHSA;
+  return tax;
+}
+
+function calculateStateTax(income) {
+  let tax = 0;
+  let lastCap = 0;
+
+  for (const bracket of CT_TAX_BRACKETS) {
+    if (income > bracket.cap) {
+      tax += (bracket.cap - lastCap) * bracket.rate;
+      lastCap = bracket.cap;
+    } else {
+      tax += (income - lastCap) * bracket.rate;
+      break;
     }
+  }
 
-    // Taxable income after deductions
-    const taxableIncome = totalIncome - traditionalContribution - hsaContribution;
-
-    // Federal tax brackets for 2024 (married filing jointly)
-    const brackets = [
-        { limit: 23200, rate: 0.10 },
-        { limit: 94300, rate: 0.12 },
-        { limit: 201050, rate: 0.22 },
-        { limit: 383900, rate: 0.24 },
-        { limit: 487450, rate: 0.32 },
-        { limit: 731200, rate: 0.35 },
-        { limit: Infinity, rate: 0.37 }
-    ];
-
-    // Standard deduction
-    const standardDeduction = 29200;
-    let incomeAfterDeduction = taxableIncome - standardDeduction;
-    if (incomeAfterDeduction < 0) incomeAfterDeduction = 0;
-
-    // Calculate federal taxes owed
-    let federalTax = 0;
-    let lastLimit = 0;
-    for (const bracket of brackets) {
-        if (incomeAfterDeduction > bracket.limit) {
-            federalTax += (bracket.limit - lastLimit) * bracket.rate;
-            lastLimit = bracket.limit;
-        } else {
-            federalTax += (incomeAfterDeduction - lastLimit) * bracket.rate;
-            break;
-        }
-    }
-
-    // Connecticut (CT) state taxes (simplified flat estimate ~5%)
-    const stateTaxRate = 0.05;
-    const stateTax = incomeAfterDeduction * stateTaxRate;
-
-    const totalTax = federalTax + stateTax;
-    const effectiveTaxRate = (totalTax / totalIncome) * 100;
-
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = `
-        <p><strong>Gross Income + RSUs:</strong> $${totalIncome.toLocaleString()}</p>
-        <p><strong>Traditional 401k Contribution:</strong> $${traditionalContribution.toLocaleString()}</p>
-        <p><strong>Roth 401k Contribution:</strong> $${rothContribution.toLocaleString()}</p>
-        <p><strong>HSA Contribution:</strong> $${hsaContribution.toLocaleString()}</p>
-        <p><strong>Taxable Income after deductions:</strong> $${incomeAfterDeduction.toLocaleString()}</p>
-        <p><strong>Federal Tax:</strong> $${federalTax.toLocaleString()}</p>
-        <p><strong>State Tax (CT):</strong> $${stateTax.toLocaleString()}</p>
-        <p><strong>Total Taxes:</strong> $${totalTax.toLocaleString()}</p>
-        <p><strong>Effective Tax Rate:</strong> ${effectiveTaxRate.toFixed(2)}%</p>
-    `;
+  return tax;
 }
