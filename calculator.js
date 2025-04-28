@@ -6,9 +6,9 @@ function calculateTaxes() {
     const rsuIncome = parseFloat(document.getElementById("rsuIncome").value);
     const age = parseInt(document.getElementById("age").value);
     const filingStatus = document.getElementById("filingStatus").value;
-    const trad401kPct = parseFloat(document.getElementById("trad401kPct").value) / 100;
-    const roth401kPct = parseFloat(document.getElementById("roth401kPct").value) / 100;
-    const hsaContribution = parseFloat(document.getElementById("hsaContribution").value);
+    let trad401kPct = parseFloat(document.getElementById("trad401kPct").value) / 100;
+    let roth401kPct = parseFloat(document.getElementById("roth401kPct").value) / 100;
+    let hsaContribution = parseFloat(document.getElementById("hsaContribution").value);
 
     // Validate inputs
     if (isNaN(grossIncome) || grossIncome <= 0) {
@@ -36,7 +36,7 @@ function calculateTaxes() {
     const max401k = age >= 50 ? 30000 : 23000;  // $23,000 if under 50, $30,000 if 50 or older
 
     // Calculate the total contribution for Traditional 401k
-    const trad401kContribution = trad401kPct * grossIncome;
+    let trad401kContribution = trad401kPct * grossIncome;
 
     // Check if the user input exceeds the max limit for Traditional 401k
     if (trad401kContribution > max401k) {
