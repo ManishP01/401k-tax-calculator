@@ -40,8 +40,17 @@ function calculateTaxes() {
 
     // Check if the user input exceeds the max limit for Traditional 401k
     if (trad401kContribution > max401k) {
-        alert(`Traditional 401k contribution exceeds the max limit of $${max401k}.`);
-        return;
+        alert(`Traditional 401k contribution exceeds the max limit of $${max401k}. Using max allowed.`);
+        trad401kContribution = max401k;
+    }
+
+    // Adjust HSA contribution based on age
+    const maxHsa = age >= 55 ? 8300 : 3850; // $8,300 for age 55 and above, $3,850 for under 55
+
+    // Check if the user input exceeds the max limit for HSA
+    if (hsaContribution > maxHsa) {
+        alert(`HSA contribution exceeds the max limit of $${maxHsa}. Using max allowed.`);
+        hsaContribution = maxHsa;
     }
 
     // Calculate total income, accounting for RSU
