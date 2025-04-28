@@ -82,6 +82,9 @@ function calculateTaxes() {
     // Calculate federal tax dynamically using the correct brackets
     const federalTax = calculateFederalTax(taxableIncome, filingStatus);
 
+    const stateTax = calculateCTTax(taxableIncome, filingStatus);
+
+
     // Calculate the tax scenario with 100% Traditional 401k contribution (max tax savings in current year)
     const maxTrad401kContribution = Math.min(grossIncome, max401k);
     const maxTradTaxableIncome = totalIncome - maxTrad401kContribution - hsaContribution;
@@ -102,6 +105,8 @@ function calculateTaxes() {
         <p>HSA Contribution: $${hsaContribution.toFixed(2)}</p>
         <p>Taxable Income after deductions: $${taxableIncome.toFixed(2)}</p>
         <p>Federal Tax (User's Choice): $${federalTax.toFixed(2)}</p>
+        <p>Connecticut State Tax(User's Choice): $${stateTax.toFixed(2)}</p>`;
+
         <p>Effective Tax Rate (User's Choice): ${effectiveTaxRate.toFixed(2)}%</p>
 
         <h3>Tax Savings Scenario (100% Traditional 401k Contribution)</h3>
@@ -110,7 +115,7 @@ function calculateTaxes() {
         <p>Federal Tax (100% Traditional 401k): $${maxTradTax.toFixed(2)}</p>
         <p>Effective Tax Rate (100% Traditional 401k): ${effectiveTaxRateMaxTrad.toFixed(2)}%</p>
         <p>Tax Difference (Max Traditional vs User Choice): $${taxDifference.toFixed(2)}</p>
-    `;
+    ;
 }
 
 // Function to calculate federal tax based on filing status
@@ -153,3 +158,36 @@ function calculateFederalTax(income, filingStatus) {
 
     return tax;
 }
+
+function calculateCTTax(taxableIncome, filingStatus) {
+    let brackets;
+    if (filingStatus === "married filing jointly") {
+        brackets = [
+            { rate: 0.03, threshold: 0 },
+            { rate: 0.05, threshold: 40000 },
+            { rate: 0.055, threshold: 100000 },
+            { rate: 0.06, threshold: 200000 },
+            { rate: 0.065, threshold: 500000 },
+            { rate: 0.069, threshold: 1000000 },
+        ];
+    } else { // Single
+        brackets = [
+            { rate: 0.03, threshold: 0 },
+            { rate: 0.05, threshold: 20000 },
+            { rate: 0.055, threshold: 50000 },
+            { rate: 0.06, threshold: 100000 },
+            { rate: 0.065, threshold: 250000 },
+            { rate: 0.069, threshold: 500000 },
+        ];
+    }
+
+    let ctTax = 0;
+    for (let i = brackets.length - 1; i >= 0; i--) {
+        if (taxableIncome > brackets[i].threshold) {
+            ctTax += (taxableIncome - brackets[i].threshold) * brackets[i].rate;
+            taxableIncome = brackets[i].threshold;
+        }
+    }
+    return ctTax;
+}
+
