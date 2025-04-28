@@ -91,8 +91,17 @@ function calculateTaxes() {
     // Calculate federal tax dynamically using the correct brackets
     const federalTax = calculateFederalTax(taxableIncome, filingStatus);
 
-    // Calculate effective tax rate
+    // Calculate the tax scenario with 100% Traditional 401k contribution (max tax savings in current year)
+    const maxTrad401kContribution = Math.min(grossIncome, max401k);
+    const maxTradTaxableIncome = totalIncome - maxTrad401kContribution - hsaContribution;
+    const maxTradTax = calculateFederalTax(maxTradTaxableIncome, filingStatus);
+
+    // Calculate the difference in taxes
+    const taxDifference = maxTradTax - federalTax;
+
+    // Calculate effective tax rate for user scenario
     const effectiveTaxRate = (federalTax / totalIncome) * 100;
+    const effectiveTaxRateMaxTrad = (maxTradTax / totalIncome) * 100;
 
     // Display results
     document.getElementById("results").innerHTML = `
@@ -101,7 +110,14 @@ function calculateTaxes() {
         <p>Roth 401k Contribution: $${roth401kContribution.toFixed(2)}</p>
         <p>HSA Contribution: $${hsaContribution.toFixed(2)}</p>
         <p>Taxable Income after deductions: $${taxableIncome.toFixed(2)}</p>
-        <p>Federal Tax: $${federalTax.toFixed(2)}</p>
-        <p>Effective Tax Rate: ${effectiveTaxRate.toFixed(2)}%</p>
+        <p>Federal Tax (User's Choice): $${federalTax.toFixed(2)}</p>
+        <p>Effective Tax Rate (User's Choice): ${effectiveTaxRate.toFixed(2)}%</p>
+
+        <h3>Tax Savings Scenario (100% Traditional 401k Contribution)</h3>
+        <p>Maximum Traditional 401k Contribution (100%): $${maxTrad401kContribution.toFixed(2)}</p>
+        <p>Taxable Income after Max 401k and HSA Deduction: $${maxTradTaxableIncome.toFixed(2)}</p>
+        <p>Federal Tax (100% Traditional 401k): $${maxTradTax.toFixed(2)}</p>
+        <p>Effective Tax Rate (100% Traditional 401k): ${effectiveTaxRateMaxTrad.toFixed(2)}%</p>
+        <p>Tax Difference (Max Traditional vs User Choice): $${taxDifference.toFixed(2)}</p>
     `;
 }
