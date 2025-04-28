@@ -3,40 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>401k/Roth/RSU Tax Calculator</title>
+    <title>401k/Roth/RSU/HSA Tax Calculator</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
-        input { margin-bottom: 10px; padding: 5px; width: 200px; }
+        input, select { margin-bottom: 10px; padding: 5px; width: 250px; }
         label { display: block; margin-top: 10px; }
+        button { padding: 10px 20px; }
         .tooltip { cursor: help; border-bottom: 1px dotted black; }
     </style>
 </head>
 <body>
-    <h1>401k/Roth/RSU Tax Calculator</h1>
+
+    <h1>401k/Roth/RSU/HSA Tax Calculator</h1>
 
     <h2>Income Inputs</h2>
-    <label>Gross Salary ($): <input type="number" id="grossIncome"></label>
+    <label>Gross Salary ($): 
+        <input type="number" id="grossIncome">
+    </label>
+
     <label>Vested RSU Gross Value This Year ($): 
         <input type="number" id="rsuIncome">
-        <span class="tooltip" title="Enter total market value of RSUs that vested this year, before taxes were withheld.">ⓘ</span>
+        <span class="tooltip" title="Total market value of RSUs vested this year before taxes.">ⓘ</span>
     </label>
-    
+
+    <label>HSA Contribution ($): 
+        <input type="number" id="hsaContribution" value="0">
+    </label>
+
     <h2>Contribution Inputs</h2>
-    <label>Traditional 401k Contribution (% of Max Limit): 
-        <input type="number" id="trad401kPct" value="0" min="0" max="100"> % 
-        OR
-        <label for="trad401kFixed">Fixed Contribution ($):</label>
-        <input type="number" id="trad401kFixed" value="0">
+    <label>Traditional 401k Contribution (% of limit OR fixed $ if below limit):
+        <input type="number" id="trad401kPct" value="0">
     </label>
 
-    <label>Roth 401k Contribution (% of Max Limit): 
-        <input type="number" id="roth401kPct" value="0" min="0" max="100"> % 
-        OR
-        <label for="roth401kFixed">Fixed Contribution ($):</label>
-        <input type="number" id="roth401kFixed" value="0">
+    <label>Roth 401k Contribution (% of limit OR fixed $ if below limit):
+        <input type="number" id="roth401kPct" value="0">
     </label>
 
-    <label>HSA Contribution ($): <input type="number" id="hsaContribution" value="0"></label>
+    <h2>Personal Info</h2>
+    <label>Age: 
+        <input type="number" id="age">
+    </label>
 
     <label>Filing Status:
         <select id="filingStatus">
@@ -45,8 +51,7 @@
         </select>
     </label>
 
-    <label>Age: <input type="number" id="age" value="40"></label>
-
+    <br><br>
 
     <button onclick="calculateTaxes()">Calculate</button>
 
@@ -54,5 +59,6 @@
     <div id="results"></div>
 
     <script src="calculator.js"></script>
+
 </body>
 </html>
