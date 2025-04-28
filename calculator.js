@@ -62,9 +62,9 @@ function calculateTaxes() {
     // Adjust HSA contribution based on age and filing status
     let maxHsa = 0;
     if (filingStatus === "married filing jointly") {
-        maxHsa = age >= 55 ? 8300 : 7000; // $8,300 for age 55 and above, $7,000 for under 55
+        maxHsa = age >= 55 ? 9550 : 8550; // $8,300 for age 55 and above, $7,000 for under 55
     } else if (filingStatus === "single") {
-        maxHsa = age >= 55 ? 8300 : 3850; // $8,300 for age 55 and above, $3,850 for under 55
+        maxHsa = age >= 55 ? 5300 : 4300; // $8,300 for age 55 and above, $3,850 for under 55
     }
 
     // Check if the user input exceeds the max limit for HSA
