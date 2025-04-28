@@ -1,42 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>401k, HSA, RSU Tax Impact Calculator</title>
-  <script src="calculator.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>401k/Roth/RSU Tax Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input { margin-bottom: 10px; padding: 5px; width: 200px; }
+        label { display: block; margin-top: 10px; }
+        .tooltip { cursor: help; border-bottom: 1px dotted black; }
+    </style>
 </head>
 <body>
-  <h1>401k, Roth, HSA, and RSU Tax Impact Calculator</h1>
+    <h1>401k/Roth/RSU Tax Calculator</h1>
 
-  <label for="grossIncome">Gross Income (Salary/Bonus, $):</label>
-  <input type="number" id="grossIncome"><br><br>
+    <h2>Income Inputs</h2>
+    <label>Gross Salary ($): <input type="number" id="grossIncome"></label>
+    <label>Vested RSU Gross Value This Year ($): 
+        <input type="number" id="rsuIncome">
+        <span class="tooltip" title="Enter total market value of RSUs that vested this year, before taxes were withheld.">ⓘ</span>
+    </label>
+    
+    <h2>Contribution Inputs</h2>
+    <label>Traditional 401k %: <input type="number" id="trad401kPct" value="0"></label>
+    <label>Roth 401k %: <input type="number" id="roth401kPct" value="0"></label>
+    <label>HSA Contribution ($): <input type="number" id="hsaContribution" value="0"></label>
 
-  <label for="rsuIncome">Vested RSU Value This Year ($):</label>
-  <input type="number" id="rsuIncome" value="0"><br><br>
+    <button onclick="calculateTaxes()">Calculate</button>
 
-  <label for="age">Your Age:</label>
-  <input type="number" id="age"><br><br>
+    <h2>Results</h2>
+    <div id="results"></div>
 
-  <label for="traditionalPercent">% to Traditional 401k:</label>
-  <input type="number" id="traditionalPercent"><br><br>
-
-  <label for="rothPercent">% to Roth 401k:</label>
-  <input type="number" id="rothPercent"><br><br>
-
-  <label for="hsaCoverage">HSA Coverage Type:</label>
-  <select id="hsaCoverage">
-    <option value="individual">Individual</option>
-    <option value="family">Family</option>
-  </select><br><br>
-
-  <label for="hsaContribution">Planned HSA Contribution ($):</label>
-  <input type="number" id="hsaContribution" placeholder="Leave blank for max"><br><br>
-
-  <button onclick="calculateTaxImpact()">Calculate</button>
-
-  <h2>Results:</h2>
-  <div id="results"></div>
-
+    <script src="calculator.js"></script>
 </body>
 </html>
