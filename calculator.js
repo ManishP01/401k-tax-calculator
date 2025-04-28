@@ -36,12 +36,16 @@ function calculateTaxes() {
     const { max401k } = calculateAdjustedLimits(age);
     const maxHSA = calculateAdjustedHSA(age, filingStatus);
 
-    // Check if user input for 401k or HSA exceeds limits
-    if (trad401kPct * grossIncome > max401k) {
+    // Calculate the total contribution for Traditional 401k
+    const trad401kContribution = trad401kPct * grossIncome;
+    
+    // Check if the user input exceeds the max limit for Traditional 401k
+    if (trad401kContribution > max401k) {
         alert(`Traditional 401k contribution exceeds the max limit of $${max401k}.`);
         return;
     }
 
+    // Check if user input for HSA exceeds limits
     if (hsaContribution > maxHSA) {
         alert(`HSA contribution exceeds the max limit of $${maxHSA}.`);
         return;
@@ -50,11 +54,10 @@ function calculateTaxes() {
     // Calculate total income, accounting for RSU
     const totalIncome = grossIncome + rsuIncome;
 
-    // Calculate 401k contributions
-    const trad401kContribution = trad401kPct * grossIncome;
+    // Calculate Roth 401k contribution
     const roth401kContribution = roth401kPct * grossIncome;
 
-    // Calculate taxable income after 401k deductions and HSA contribution
+    // Calculate taxable income after 401k and HSA deductions
     const taxableIncome = totalIncome - trad401kContribution - hsaContribution;
 
     // Calculate federal tax dynamically using the correct brackets
@@ -103,44 +106,41 @@ function calculateTaxes() {
     `;
 }
 
-// Function to calculate federal tax based on tax brackets
-function calculateFederalTax(taxableIncome, filingStatus) {
+// Function to calculate federal tax based on filing status
+function calculateFederalTax(income, filingStatus) {
     let tax = 0;
 
-    // Define the tax brackets for Married Filing Jointly and Single
-    const brackets = {
-        "Married Filing Jointly": [
-            { limit: 22000, rate: 0.10 },
-            { limit: 89450, rate: 0.12 },
-            { limit: 190750, rate: 0.22 },
-            { limit: 364200, rate: 0.24 },
-            { limit: 462500, rate: 0.32 },
-            { limit: 693750, rate: 0.35 },
-            { limit: Infinity, rate: 0.37 }
-        ],
-        "Single": [
-            { limit: 11000, rate: 0.10 },
-            { limit: 44725, rate: 0.12 },
-            { limit: 95375, rate: 0.22 },
-            { limit: 182100, rate: 0.24 },
-            { limit: 231250, rate: 0.32 },
-            { limit: 578100, rate: 0.35 },
-            { limit: Infinity, rate: 0.37 }
-        ]
-    };
+    // Tax brackets for Single
+    const singleBrackets = [
+        { threshold: 11000, rate: 0.1 },
+        { threshold: 44725, rate: 0.12 },
+        { threshold: 95375, rate: 0.22 },
+        { threshold: 182100, rate: 0.24 },
+        { threshold: 231250, rate: 0.32 },
+        { threshold: 578100, rate: 0.35 },
+        { threshold: Infinity, rate: 0.37 }
+    ];
 
-    const selectedBrackets = brackets[filingStatus] || brackets["Married Filing Jointly"];
-    let remainingIncome = taxableIncome;
+    // Tax brackets for Married Filing Jointly
+    const marriedBrackets = [
+        { threshold: 22000, rate: 0.1 },
+        { threshold: 89450, rate: 0.12 },
+        { threshold: 190750, rate: 0.22 },
+        { threshold: 364200, rate: 0.24 },
+        { threshold: 462500, rate: 0.32 },
+        { threshold: 693750, rate: 0.35 },
+        { threshold: Infinity, rate: 0.37 }
+    ];
 
-    // Calculate tax based on the taxable income and filing status
-    for (let i = 0; i < selectedBrackets.length; i++) {
-        const bracket = selectedBrackets[i];
-        if (remainingIncome > bracket.limit) {
-            const taxableAtThisRate = Math.min(remainingIncome, bracket.limit);
-            tax += taxableAtThisRate * bracket.rate;
-            remainingIncome -= taxableAtThisRate;
-        } else {
-            break;
+    const brackets = filingStatus === "married" ? marriedBrackets : singleBrackets;
+
+    // Calculate tax
+    for (let i = 0; i < brackets.length; i++) {
+        const { threshold, rate } = brackets[i];
+        if (income > threshold) {
+            const nextThreshold = brackets[i + 1] ? brackets[i + 1].threshold : Infinity;
+            const taxableAtThisRate = Math.min(income, nextThreshold) - threshold;
+            tax += taxableAtThisRate * rate;
         }
     }
 
