@@ -5,7 +5,7 @@ function calculateTaxes() {
     const grossIncome = parseFloat(document.getElementById("grossIncome").value);
     const rsuIncome = parseFloat(document.getElementById("rsuIncome").value);
     const age = parseInt(document.getElementById("age").value);
-    const filingStatus = document.getElementById("filingStatus").value;
+    const filingStatus = document.getElementById("filingStatus").value; // Get selected filing status
     let trad401kPct = parseFloat(document.getElementById("trad401kPct").value) / 100;
     let roth401kPct = parseFloat(document.getElementById("roth401kPct").value) / 100;
     let hsaContribution = parseFloat(document.getElementById("hsaContribution").value);
