@@ -134,4 +134,64 @@ function calculateTaxes() {
     results += `<p><strong>Take-Home Pay Difference: $${takeHomeDifference.toFixed(2)}</strong> (${takeHomeDifference > 0 ? 'More' : 'Less'})</p>`;
 
     document.getElementById('results').innerHTML = results;
+
+    drawCurrentYearChart({
+    federalTaxes: federalTaxAmount,
+    stateTaxes: stateTaxAmount,
+    traditional401k: trad401kContribution,
+    roth401k: roth401kContribution,
+    hsaContribution: hsaContribution,
+    takeHome: takeHomePay
+});
+
 }
+
+function drawCurrentYearChart(taxBreakdown) {
+    const ctx = document.getElementById('currentYearChart').getContext('2d');
+
+    // If there is an existing chart, destroy it first
+    if (window.currentYearPie) {
+        window.currentYearPie.destroy();
+    }
+
+    window.currentYearPie = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: [
+                'Federal Taxes',
+                'State Taxes',
+                'Traditional 401k Contributions',
+                'Roth 401k Contributions',
+                'HSA Contributions',
+                'Take-Home Pay'
+            ],
+            datasets: [{
+                data: [
+                    taxBreakdown.federalTaxes,
+                    taxBreakdown.stateTaxes,
+                    taxBreakdown.traditional401k,
+                    taxBreakdown.roth401k,
+                    taxBreakdown.hsaContribution,
+                    taxBreakdown.takeHome
+                ],
+                backgroundColor: [
+                    '#ff6384', // Federal Taxes - Red
+                    '#36a2eb', // State Taxes - Blue
+                    '#ffcd56', // Traditional 401k - Yellow
+                    '#4bc0c0', // Roth 401k - Teal
+                    '#9966ff', // HSA - Purple
+                    '#4caf50'  // Take Home Pay - Green
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+}
+
