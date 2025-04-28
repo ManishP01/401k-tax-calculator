@@ -122,7 +122,7 @@ function calculateFederalTax(income, filingStatus) {
         { threshold: Infinity, rate: 0.37 }
     ];
 
-    const brackets = filingStatus === "married" ? marriedBrackets : singleBrackets;
+    const brackets = filingStatus === "married filing jointly" ? marriedBrackets : singleBrackets;
 
     // Calculate tax
     for (let i = 0; i < brackets.length; i++) {
