@@ -8,6 +8,8 @@ function calculateTaxes() {
     const filingStatus = document.getElementById("filingStatus").value; // Get selected filing status
     let trad401kPct = parseFloat(document.getElementById("trad401kPct").value) / 100;
     let roth401kPct = parseFloat(document.getElementById("roth401kPct").value) / 100;
+    let trad401kFixed = parseFloat(document.getElementById("trad401kFixed").value); // Fixed contribution for Traditional 401k
+    let roth401kFixed = parseFloat(document.getElementById("roth401kFixed").value); // Fixed contribution for Roth 401k
     let hsaContribution = parseFloat(document.getElementById("hsaContribution").value);
 
     // Validate inputs
@@ -36,7 +38,12 @@ function calculateTaxes() {
     const max401k = age >= 50 ? 30000 : 23000;  // $23,000 if under 50, $30,000 if 50 or older
 
     // Calculate the total contribution for Traditional 401k
-    let trad401kContribution = trad401kPct * grossIncome;
+    let trad401kContribution = 0;
+    if (trad401kFixed > 0) {
+        trad401kContribution = trad401kFixed;
+    } else {
+        trad401kContribution = trad401kPct * max401k;
+    }
 
     // Check if the user input exceeds the max limit for Traditional 401k
     if (trad401kContribution > max401k) {
@@ -44,8 +51,21 @@ function calculateTaxes() {
         trad401kContribution = max401k;
     }
 
-    // Adjust HSA contribution based on age
-    const maxHsa = age >= 55 ? 8300 : 3850; // $8,300 for age 55 and above, $3,850 for under 55
+    // Calculate the total contribution for Roth 401k
+    let roth401kContribution = 0;
+    if (roth401kFixed > 0) {
+        roth401kContribution = roth401kFixed;
+    } else {
+        roth401kContribution = roth401kPct * max401k;
+    }
+
+    // Adjust HSA contribution based on age and filing status
+    let maxHsa = 0;
+    if (filingStatus === "married filing jointly") {
+        maxHsa = age >= 55 ? 8300 : 7000; // $8,300 for age 55 and above, $7,000 for under 55
+    } else if (filingStatus === "single") {
+        maxHsa = age >= 55 ? 8300 : 3850; // $8,300 for age 55 and above, $3,850 for under 55
+    }
 
     // Check if the user input exceeds the max limit for HSA
     if (hsaContribution > maxHsa) {
@@ -55,9 +75,6 @@ function calculateTaxes() {
 
     // Calculate total income, accounting for RSU
     const totalIncome = grossIncome + rsuIncome;
-
-    // Calculate Roth 401k contribution
-    const roth401kContribution = roth401kPct * grossIncome;
 
     // Calculate taxable income after 401k and HSA deductions
     const taxableIncome = totalIncome - trad401kContribution - hsaContribution;
