@@ -59,6 +59,7 @@ function calculate() {
     const age = parseInt(document.getElementById('age').value);
     const traditionalPercent = parseFloat(document.getElementById('traditionalPercent').value);
     const rothPercent = parseFloat(document.getElementById('rothPercent').value);
+    const hsaContribution = parseFloat(document.getElementById('hsaContribution').value);
 
     if ((traditionalPercent + rothPercent) !== 100) {
         alert("Traditional % and Roth % must add up to 100%.");
@@ -71,7 +72,10 @@ function calculate() {
     const traditionalContribution = maxContribution * (traditionalPercent / 100);
     const rothContribution = maxContribution * (rothPercent / 100);
 
-    const taxableIncome = salary - traditionalContribution;
+    const hsaLimit = (age >= 55) ? 7500 : 3600;  // HSA contribution limits
+    const hsaActualContribution = Math.min(hsaContribution, hsaLimit);
+
+    const taxableIncome = salary - traditionalContribution - hsaActualContribution;
 
     const federalTaxes = federalTax(taxableIncome);
     const stateTaxes = ctTax(taxableIncome);
@@ -83,7 +87,8 @@ function calculate() {
         <h2>Results:</h2>
         <p><strong>Traditional 401k Contribution:</strong> $${traditionalContribution.toFixed(2)}</p>
         <p><strong>Roth 401k Contribution:</strong> $${rothContribution.toFixed(2)}</p>
-        <p><strong>Taxable Income (after Traditional 401k):</strong> $${taxableIncome.toFixed(2)}</p>
+        <p><strong>HSA Contribution:</strong> $${hsaActualContribution.toFixed(2)}</p>
+        <p><strong>Taxable Income (after 401k and HSA):</strong> $${taxableIncome.toFixed(2)}</p>
         <p><strong>Federal Tax:</strong> $${federalTaxes.toFixed(2)}</p>
         <p><strong>Connecticut State Tax:</strong> $${stateTaxes.toFixed(2)}</p>
         <p><strong>Total Taxes:</strong> $${totalTaxes.toFixed(2)}</p>
