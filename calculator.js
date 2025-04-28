@@ -1,6 +1,6 @@
 function calculateTaxes() {
-    console.log("Calculating taxes..."); // This will log when the button is clicked
-    
+    console.log("Calculating taxes...");
+
     // Get input values
     const grossIncome = parseFloat(document.getElementById("grossIncome").value);
     const rsuIncome = parseFloat(document.getElementById("rsuIncome").value);
@@ -32,22 +32,15 @@ function calculateTaxes() {
         return;
     }
 
-    // Calculate adjusted 401k and HSA contribution limits based on age and filing status
-    const { max401k } = calculateAdjustedLimits(age);
-    const maxHSA = calculateAdjustedHSA(age, filingStatus);
+    // Adjust max 401k limit based on age
+    const max401k = age >= 50 ? 30000 : 23000;  // $23,000 if under 50, $30,000 if 50 or older
 
     // Calculate the total contribution for Traditional 401k
     const trad401kContribution = trad401kPct * grossIncome;
-    
+
     // Check if the user input exceeds the max limit for Traditional 401k
     if (trad401kContribution > max401k) {
         alert(`Traditional 401k contribution exceeds the max limit of $${max401k}.`);
-        return;
-    }
-
-    // Check if user input for HSA exceeds limits
-    if (hsaContribution > maxHSA) {
-        alert(`HSA contribution exceeds the max limit of $${maxHSA}.`);
         return;
     }
 
@@ -62,23 +55,11 @@ function calculateTaxes() {
 
     // Calculate federal tax dynamically using the correct brackets
     const federalTax = calculateFederalTax(taxableIncome, filingStatus);
-    
-    // Check for valid federal tax calculation
-    if (isNaN(federalTax) || federalTax < 0) {
-        alert("There was an error calculating federal tax.");
-        return;
-    }
 
     // Calculate the tax scenario with 100% Traditional 401k contribution (max tax savings in current year)
     const maxTrad401kContribution = Math.min(grossIncome, max401k);
     const maxTradTaxableIncome = totalIncome - maxTrad401kContribution - hsaContribution;
     const maxTradTax = calculateFederalTax(maxTradTaxableIncome, filingStatus);
-
-    // Check for valid maxTraditionalTax calculation
-    if (isNaN(maxTradTax) || maxTradTax < 0) {
-        alert("There was an error calculating the max traditional 401k tax.");
-        return;
-    }
 
     // Calculate the difference in taxes
     const taxDifference = maxTradTax - federalTax;
