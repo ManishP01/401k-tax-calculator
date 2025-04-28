@@ -2,241 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>401(k) Tax Impact Calculator</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; max-width: 800px; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
-    label { display: block; margin: 10px 0 5px; }
-    input { width: 100%; padding: 8px; margin-bottom: 15px; background: var(--input-bg); color: var(--text); border: 1px solid #ccc; }
-    button { padding: 10px 20px; margin-top: 10px; background: #4caf50; color: white; border: none; cursor: pointer; }
-    button:hover { background: #45a049; }
-    .section { margin-top: 30px; }
-    .output { border: 1px solid #ddd; padding: 15px; margin-top: 20px; background: var(--output-bg); }
-    .chart-container { margin-top: 20px; }
-    #themeToggle { float: right; margin-bottom: 20px; background: #555; }
-    :root {
-      --bg: #ffffff;
-      --text: #000000;
-      --input-bg: #ffffff;
-      --output-bg: #f9f9f9;
-    }
-    .dark {
-      --bg: #121212;
-      --text: #ffffff;
-      --input-bg: #1e1e1e;
-      --output-bg: #1e1e1e;
-    }
-  </style>
+  <title>401k Tax Impact Calculator</title>
 </head>
 <body>
+  <h1>401k Tax Impact Calculator</h1>
 
-<button id="themeToggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+  <form id="taxForm">
+    <label for="salary">Gross Salary ($):</label>
+    <input type="number" id="salary" required><br><br>
 
-<h1>401(k) Tax Impact Calculator</h1>
+    <label for="traditionalPercent">Traditional 401k Contribution (%):</label>
+    <input type="number" id="traditionalPercent" min="0" max="100" required><br><br>
 
-<div class="section">
-  <label>Annual Gross Income ($)</label>
-  <input type="number" id="income" value="100000">
+    <label for="rothPercent">Roth 401k Contribution (%):</label>
+    <input type="number" id="rothPercent" min="0" max="100" required><br><br>
 
-  <label>401(k) Contribution ($)</label>
-  <input type="number" id="contribution" value="20000">
+    <label for="retirementIncome">Estimated Retirement Income ($):</label>
+    <input type="number" id="retirementIncome" placeholder="Optional"><br><br>
 
-  <label>Years Until Retirement</label>
-  <input type="number" id="years" value="25">
+    <button type="submit">Calculate</button>
+  </form>
 
-  <label>Expected Annual Return (%)</label>
-  <input type="number" id="returnRate" value="7">
+  <div id="results" style="margin-top:20px;"></div>
 
-  <label>Estimated Retirement Tax Rate (%)</label>
-  <input type="number" id="retirementTaxRate" value="20">
-
-</div>
-
-<div id="results" class="output"></div>
-
-<div class="section">
-  <button onclick="exportCSV()">Download Results (CSV)</button>
-</div>
-
-<div class="chart-container">
-  <canvas id="comparisonChart"></canvas>
-</div>
-
-<div class="chart-container">
-  <canvas id="forecastChart"></canvas>
-</div>
-
-<script>
-let chart, forecastChart;
-
-// --- Tax Calculation Functions ---
-function federalTax(mti) {
-  const brackets = [
-    [0, 22000, 0.10],
-    [22001, 89450, 0.12],
-    [89451, 190750, 0.22],
-    [190751, 364200, 0.24],
-    [364201, 462500, 0.32],
-    [462501, 693750, 0.35],
-    [693751, Infinity, 0.37]
-  ];
-  let tax = 0;
-  for (let [low, high, rate] of brackets) {
-    if (mti > low) {
-      tax += (Math.min(mti, high) - low) * rate;
-    } else break;
-  }
-  return tax;
-}
-
-function ctTax(mti) {
-  const brackets = [
-    [0, 20000, 0.03],
-    [20001, 100000, 0.05],
-    [100001, 200000, 0.055],
-    [200001, 400000, 0.06],
-    [400001, 500000, 0.065],
-    [500001, 1000000, 0.069],
-    [1000001, Infinity, 0.0699]
-  ];
-  let tax = 0;
-  for (let [low, high, rate] of brackets) {
-    if (mti > low) {
-      tax += (Math.min(mti, high) - low) * rate;
-    } else break;
-  }
-  return tax;
-}
-
-let taxableTrad, taxFedTrad, taxCTTrad, takeHomeTrad;
-let taxableRoth, taxFedRoth, taxCTRoth, takeHomeRoth;
-
-function calculate() {
-  const income = parseFloat(document.getElementById('income').value) || 0;
-  const contribution = parseFloat(document.getElementById('contribution').value) || 0;
-  const years = parseFloat(document.getElementById('years').value) || 0;
-  const returnRate = parseFloat(document.getElementById('returnRate').value) / 100 || 0;
-  const retirementTaxRate = parseFloat(document.getElementById('retirementTaxRate').value) / 100 || 0;
-
-  const stdDeduction = 27700;
-
-  taxableTrad = Math.max(0, income - contribution - stdDeduction);
-  taxFedTrad = federalTax(taxableTrad);
-  taxCTTrad = ctTax(taxableTrad);
-  takeHomeTrad = income - contribution - taxFedTrad - taxCTTrad;
-
-  taxableRoth = Math.max(0, income - stdDeduction);
-  taxFedRoth = federalTax(taxableRoth);
-  taxCTRoth = ctTax(taxableRoth);
-  takeHomeRoth = income - contribution - taxFedRoth - taxCTRoth;
-
-  const tradFuture = contribution * Math.pow(1 + returnRate, years) * (1 - retirementTaxRate);
-  const rothFuture = contribution * Math.pow(1 + returnRate, years);
-
-  document.getElementById('results').innerHTML = `
-    <h3>Tax Comparison</h3>
-    <b>Traditional 401(k):</b><br>
-    Taxable Income: $${taxableTrad.toFixed(2)}<br>
-    Federal Tax: $${taxFedTrad.toFixed(2)}<br>
-    CT State Tax: $${taxCTTrad.toFixed(2)}<br>
-    Take-Home Pay: $${takeHomeTrad.toFixed(2)}<br><br>
-
-    <b>Roth 401(k):</b><br>
-    Taxable Income: $${taxableRoth.toFixed(2)}<br>
-    Federal Tax: $${taxFedRoth.toFixed(2)}<br>
-    CT State Tax: $${taxCTRoth.toFixed(2)}<br>
-    Take-Home Pay: $${takeHomeRoth.toFixed(2)}<br><br>
-
-    <h3>Retirement Forecast</h3>
-    <b>Traditional 401(k) after retirement taxes:</b> $${tradFuture.toFixed(2)}<br>
-    <b>Roth 401(k) (tax-free):</b> $${rothFuture.toFixed(2)}
-  `;
-
-  drawChart([takeHomeTrad, takeHomeRoth]);
-  drawForecastChart([tradFuture, rothFuture]);
-  saveInputs();
-}
-
-function drawChart(data) {
-  if (chart) chart.destroy();
-  chart = new Chart(document.getElementById('comparisonChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Traditional', 'Roth'],
-      datasets: [{
-        label: 'Take-Home Pay After Contributions and Taxes',
-        data: data,
-        backgroundColor: ['#4caf50', '#2196f3']
-      }]
-    },
-    options: { scales: { y: { beginAtZero: true } } }
-  });
-}
-
-function drawForecastChart(data) {
-  if (forecastChart) forecastChart.destroy();
-  forecastChart = new Chart(document.getElementById('forecastChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Traditional Future', 'Roth Future'],
-      datasets: [{
-        label: 'Future Value',
-        data: data,
-        backgroundColor: ['#ff9800', '#3f51b5']
-      }]
-    },
-    options: { scales: { y: { beginAtZero: true } } }
-  });
-}
-
-function exportCSV() {
-  const rows = [
-    ['Plan', 'Taxable Income', 'Federal Tax', 'CT Tax', 'Take-Home Pay'],
-    ['Traditional', taxableTrad, taxFedTrad, taxCTTrad, takeHomeTrad],
-    ['Roth', taxableRoth, taxFedRoth, taxCTRoth, takeHomeRoth]
-  ];
-  let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "401k_tax_results.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-// Theme Toggle
-function toggleTheme() {
-  document.body.classList.toggle('dark');
-}
-
-// Auto Save Inputs
-function saveInputs() {
-  const fields = ['income', 'contribution', 'years', 'returnRate', 'retirementTaxRate'];
-  for (let id of fields) {
-    localStorage.setItem(id, document.getElementById(id).value);
-  }
-}
-
-// Load saved
-function loadInputs() {
-  const fields = ['income', 'contribution', 'years', 'returnRate', 'retirementTaxRate'];
-  for (let id of fields) {
-    if (localStorage.getItem(id)) {
-      document.getElementById(id).value = localStorage.getItem(id);
-    }
-  }
-  calculate();
-}
-
-// Live calculation
-document.querySelectorAll('input').forEach(input => {
-  input.addEventListener('input', calculate);
-});
-
-// On load
-loadInputs();
-</script>
-
+  <script src="calculator.js"></script>
 </body>
 </html>
