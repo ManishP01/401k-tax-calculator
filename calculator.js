@@ -152,17 +152,6 @@ function calculateTaxes() {
 
     document.getElementById('results').innerHTML = results;
     
-
-    const results = `
-        <p><strong>Taxable Income:</strong> $${taxableIncome.toLocaleString()}</p>
-        <p><strong>Federal Tax:</strong> $${federalTax.toLocaleString()}</p>
-        <p><strong>State Tax (CT):</strong> $${stateTax.toLocaleString()}</p>
-        <p><strong>Total Tax:</strong> $${totalTax.toLocaleString()}</p>
-        <p><strong>Effective Tax Rate:</strong> ${effectiveTaxRate}%</p>
-        <p><strong>Take-Home Pay:</strong> $${takeHome.toLocaleString()}</p>
-    `;
-
-    document.getElementById("results").innerHTML = results;
 }
 
 
