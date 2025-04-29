@@ -1,4 +1,5 @@
 console.log("calculator.js loaded");
+import { renderPieChart } from './charts.js';
 // Define tax brackets
 const federalBrackets = {
     "single": [
@@ -151,6 +152,14 @@ function calculateTaxes() {
     results += `<p><strong>Take-Home Pay Difference: $${takeHomeDifference.toFixed(2)}</strong> (${takeHomeDifference > 0 ? 'More' : 'Less'})</p>`;
 
     document.getElementById('results').innerHTML = results;
+
+    renderPieChart({
+    totalTax,
+    total401k: trad401kContribution + roth401kContribution,
+    totalHsa: hsaContribution,
+    takeHome
+});
+
     
 }
 
