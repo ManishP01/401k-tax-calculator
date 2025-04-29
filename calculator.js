@@ -55,96 +55,64 @@ function calculateFederalTax(taxableIncome, filingStatus) {
 
 // Main Calculation
 function calculateTaxes() {
-    const grossIncome = parseFloat(document.getElementById('grossIncome').value) || 0;
-    const rsuIncome = parseFloat(document.getElementById('rsuIncome').value) || 0;
-    const trad401kPct = parseFloat(document.getElementById('trad401kPct').value) || 0;
-    const roth401kPct = parseFloat(document.getElementById('roth401kPct').value) || 0;
-    const hsaContributionInput = parseFloat(document.getElementById('hsaContribution').value) || 0;
-    const filingStatus = document.getElementById('filingStatus').value || "single";
-    const age = parseInt(document.getElementById('age').value) || 30;
+    const grossIncome = parseFloat(document.getElementById("grossIncome").value) || 0;
+    const rsuIncome = parseFloat(document.getElementById("rsuIncome").value) || 0;
+    const age = parseInt(document.getElementById("age").value, 10) || 30;
+    const filingStatus = document.getElementById("filingStatus").value;
 
     const totalIncome = grossIncome + rsuIncome;
 
-    // Adjust max 401k limit based on age
-    const max401kLimit = age >= 50 ? 30000 : 23000;
+    // 401k and HSA input types
+    const trad401kType = document.getElementById("trad401kType").value;
+    const trad401kValue = parseFloat(document.getElementById("trad401kValue").value) || 0;
+    const roth401kType = document.getElementById("roth401kType").value;
+    const roth401kValue = parseFloat(document.getElementById("roth401kValue").value) || 0;
+    const hsaType = document.getElementById("hsaType").value;
+    const hsaValue = parseFloat(document.getElementById("hsaValue").value) || 0;
 
-    // Traditional 401k and Roth 401k are % of max limit
-    let trad401kContribution = (trad401kPct / 100) * max401kLimit;
-    let roth401kContribution = (roth401kPct / 100) * max401kLimit;
+    // Legal contribution limits
+    const max401k = age >= 50 ? 30000 : 23000;
+    const maxHsa = getMaxHsa(age, filingStatus);
 
-    if (trad401kContribution + roth401kContribution > max401kLimit) {
-        alert(`Combined 401k contributions cannot exceed the limit of $${max401kLimit}. Adjusting proportionally.`);
-        const totalPct = trad401kPct + roth401kPct;
-        trad401kContribution = (trad401kPct / totalPct) * max401kLimit;
-        roth401kContribution = (roth401kPct / totalPct) * max401kLimit;
+    // Calculate actual 401k and HSA contributions
+    let trad401k = trad401kType === "percent" ? (trad401kValue / 100) * max401k : trad401kValue;
+    let roth401k = roth401kType === "percent" ? (roth401kValue / 100) * max401k : roth401kValue;
+    let hsaContribution = hsaType === "percent" ? (hsaValue / 100) * maxHsa : hsaValue;
+
+    // Cap each at their respective limits
+    if (trad401k + roth401k > max401k) {
+        alert(`Total 401k contributions exceed the $${max401k} limit. They will be capped.`);
+        const ratio = trad401k / (trad401k + roth401k);
+        trad401k = ratio * max401k;
+        roth401k = (1 - ratio) * max401k;
     }
 
-    // Adjust max HSA limit based on age and filing status
-    let maxHsa = 0;
-    if (filingStatus === "married filing jointly") {
-        maxHsa = age >= 55 ? 9550 : 8550;
-    } else {
-        maxHsa = age >= 55 ? 5300 : 4300;
+    if (hsaContribution > maxHsa) {
+        alert(`HSA contribution exceeds the $${maxHsa} limit. It will be capped.`);
+        hsaContribution = maxHsa;
     }
-    let hsaContribution = Math.min(hsaContributionInput, maxHsa);
 
-    // Taxable income with user's actual choice
-    const taxableIncome = totalIncome - trad401kContribution - hsaContribution;
+    const taxableIncome = totalIncome - trad401k - hsaContribution;
 
     const federalTax = calculateFederalTax(taxableIncome, filingStatus);
-    const stateTax = calculateCTTax(taxableIncome, filingStatus);
-    const combinedEffectiveTaxRate = (federalTax + stateTax) / totalIncome * 100;
+    const stateTax = calculateStateTax(taxableIncome);
+    const totalTax = federalTax + stateTax;
 
-    const totalContributions = trad401kContribution + roth401kContribution + hsaContribution;
-    const takeHomePay = totalIncome - (federalTax + stateTax + totalContributions);
+    const takeHome = totalIncome - totalTax - trad401k - roth401k - hsaContribution;
+    const effectiveTaxRate = (totalTax / totalIncome * 100).toFixed(2);
 
-    // === Tax Calculation for 100% Traditional 401k Scenario ===
-    const maxTrad401kContribution = max401kLimit;
-    const taxableIncomeMaxTraditional = totalIncome - maxTrad401kContribution - hsaContribution;
-    const federalTaxMaxTraditional = calculateFederalTax(taxableIncomeMaxTraditional, filingStatus);
-    const stateTaxMaxTraditional = calculateCTTax(taxableIncomeMaxTraditional, filingStatus);
-    const totalTaxMaxTraditional = federalTaxMaxTraditional + stateTaxMaxTraditional;
-    const takeHomePayMaxTraditional = totalIncome - (totalTaxMaxTraditional + maxTrad401kContribution + hsaContribution);
+    const results = `
+        <p><strong>Taxable Income:</strong> $${taxableIncome.toLocaleString()}</p>
+        <p><strong>Federal Tax:</strong> $${federalTax.toLocaleString()}</p>
+        <p><strong>State Tax (CT):</strong> $${stateTax.toLocaleString()}</p>
+        <p><strong>Total Tax:</strong> $${totalTax.toLocaleString()}</p>
+        <p><strong>Effective Tax Rate:</strong> ${effectiveTaxRate}%</p>
+        <p><strong>Take-Home Pay:</strong> $${takeHome.toLocaleString()}</p>
+    `;
 
-    // Differences
-    const taxDifference = (federalTax + stateTax) - totalTaxMaxTraditional;
-    const takeHomeDifference = takeHomePay - takeHomePayMaxTraditional;
-
-    // Build Results
-    let results = "";
-
-    results += `<h3>Current Selection</h3>`;
-    results += `<p>Federal Tax: $${federalTax.toFixed(2)}</p>`;
-    results += `<p>Connecticut State Tax: $${stateTax.toFixed(2)}</p>`;
-    results += `<p><strong>Combined Effective Tax Rate: ${combinedEffectiveTaxRate.toFixed(2)}%</strong></p>`;
-    results += `<p><strong>Total 401k + HSA Contributions: $${totalContributions.toFixed(2)}</strong></p>`;
-    results += `<p><strong>Estimated Take-Home Pay: $${takeHomePay.toFixed(2)}</strong></p>`;
-
-    results += `<hr>`;
-
-    results += `<h3>If 100% Traditional 401k Contribution</h3>`;
-    results += `<p>Federal Tax: $${federalTaxMaxTraditional.toFixed(2)}</p>`;
-    results += `<p>Connecticut State Tax: $${stateTaxMaxTraditional.toFixed(2)}</p>`;
-    results += `<p><strong>Estimated Take-Home Pay: $${takeHomePayMaxTraditional.toFixed(2)}</strong></p>`;
-
-    results += `<hr>`;
-
-    results += `<h3>Comparison</h3>`;
-    results += `<p><strong>Tax Saved by Going 100% Traditional 401k: $${taxDifference.toFixed(2)}</strong></p>`;
-    results += `<p><strong>Take-Home Pay Difference: $${takeHomeDifference.toFixed(2)}</strong> (${takeHomeDifference > 0 ? 'More' : 'Less'})</p>`;
-
-    document.getElementById('results').innerHTML = results;
-
-    drawCurrentYearChart({
-    federalTaxes: federalTaxAmount,
-    stateTaxes: stateTaxAmount,
-    traditional401k: trad401kContribution,
-    roth401k: roth401kContribution,
-    hsaContribution: hsaContribution,
-    takeHome: takeHomePay
-});
-
+    document.getElementById("results").innerHTML = results;
 }
+
 
 function drawCurrentYearChart(taxBreakdown) {
     const ctx = document.getElementById('currentYearChart').getContext('2d');
