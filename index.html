@@ -26,18 +26,35 @@
         <span class="tooltip" title="Total market value of RSUs vested this year before taxes.">ⓘ</span>
     </label>
 
-    <label>HSA Contribution ($): 
-        <input type="number" id="hsaContribution" value="0">
-    </label>
-
     <h2>Contribution Inputs</h2>
-    <label>Traditional 401k Contribution (% of limit OR fixed $ if below limit):
-        <input type="number" id="trad401kPct" value="0">
+
+    <label>
+        Traditional 401k Contribution:
+        <select id="trad401kType">
+            <option value="percent">Percent of Limit</option>
+            <option value="fixed">Fixed $ Amount</option>
+        </select>
+        <input type="number" id="trad401kValue" placeholder="Enter value">
+    </label>
+    
+    <label>
+        Roth 401k Contribution:
+        <select id="roth401kType">
+            <option value="percent">Percent of Limit</option>
+            <option value="fixed">Fixed $ Amount</option>
+        </select>
+        <input type="number" id="roth401kValue" placeholder="Enter value">
+    </label>
+    
+    <label>
+        HSA Contribution:
+        <select id="hsaType">
+            <option value="percent">Percent of Limit</option>
+            <option value="fixed">Fixed $ Amount</option>
+        </select>
+        <input type="number" id="hsaValue" placeholder="Enter value">
     </label>
 
-    <label>Roth 401k Contribution (% of limit OR fixed $ if below limit):
-        <input type="number" id="roth401kPct" value="0">
-    </label>
 
     <h2>Personal Info</h2>
     <label>Age: 
