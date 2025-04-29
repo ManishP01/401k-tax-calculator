@@ -109,7 +109,49 @@ function calculateTaxes() {
     const totalTax = federalTax + stateTax;
 
     const takeHome = totalIncome - totalTax - trad401k - roth401k - hsaContribution;
-    const effectiveTaxRate = (totalTax / totalIncome * 100).toFixed(2);
+    const totalContributions = trad401k + roth401k + hsaContribution
+    const combinedEffectiveTaxRate = (totalTax / totalIncome * 100).toFixed(2);
+
+
+   
+    // === Tax Calculation for 100% Traditional 401k Scenario ===
+    const maxTrad401kContribution = max401k;
+    const taxableIncomeMaxTraditional = totalIncome - maxTrad401kContribution - hsaContribution;
+    const federalTaxMaxTraditional = calculateFederalTax(taxableIncomeMaxTraditional, filingStatus);
+    const stateTaxMaxTraditional = calculateStateTax(taxableIncomeMaxTraditional, filingStatus);
+    const totalTaxMaxTraditional = federalTaxMaxTraditional + stateTaxMaxTraditional;
+    const takeHomePayMaxTraditional = totalIncome - (totalTaxMaxTraditional + maxTrad401kContribution + hsaContribution);
+
+    // Differences
+    const taxDifference = (federalTax + stateTax) - totalTaxMaxTraditional;
+    const takeHomeDifference = takeHome - takeHomePayMaxTraditional;
+
+    // Build Results
+    let results = "";
+
+    results += `<h3>Current Selection</h3>`;
+    results += `<p>Taxable Income: $${taxableIncome.toLocaleString()}</p>`;
+    results += `<p>Federal Tax: $${federalTax.toFixed(2)}</p>`;
+    results += `<p>Connecticut State Tax: $${stateTax.toFixed(2)}</p>`;
+    results += `<p><strong>Combined Effective Tax Rate: ${combinedEffectiveTaxRate.toFixed(2)}%</strong></p>`;
+    results += `<p><strong>Total 401k + HSA Contributions: $${totalContributions.toFixed(2)}</strong></p>`;
+    results += `<p><strong>Estimated Take-Home Pay: $${takeHome.toFixed(2)}</strong></p>`;
+
+    results += `<hr>`;
+
+    results += `<h3>If 100% Traditional 401k Contribution</h3>`;
+    results += `<p>Federal Tax: $${federalTaxMaxTraditional.toFixed(2)}</p>`;
+    results += `<p>Connecticut State Tax: $${stateTaxMaxTraditional.toFixed(2)}</p>`;
+    results += `<p><strong>Estimated Take-Home Pay: $${takeHomePayMaxTraditional.toFixed(2)}</strong></p>`;
+
+    results += `<hr>`;
+
+    results += `<h3>Comparison</h3>`;
+    results += `<p><strong>Tax Saved by Going 100% Traditional 401k: $${taxDifference.toFixed(2)}</strong></p>`;
+    results += `<p><strong>Take-Home Pay Difference: $${takeHomeDifference.toFixed(2)}</strong> (${takeHomeDifference > 0 ? 'More' : 'Less'})</p>`;
+
+    document.getElementById('results').innerHTML = results;
+    
 
     const results = `
         <p><strong>Taxable Income:</strong> $${taxableIncome.toLocaleString()}</p>
