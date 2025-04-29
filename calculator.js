@@ -20,6 +20,15 @@ const federalBrackets = {
     ]
 };
 
+function getMaxHsa(age, filingStatus) {
+    if (filingStatus === "married filing jointly") {
+        return age >= 55 ? 9550 : 8550;
+    } else {
+        return age >= 55 ? 5300 : 4300;
+    }
+}
+
+
 // CT State Tax (Simplified)
 function calculateCTTax(taxableIncome, filingStatus) {
     let tax = 0;
