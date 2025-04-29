@@ -133,7 +133,7 @@ function calculateTaxes() {
     results += `<p>Taxable Income: $${taxableIncome.toLocaleString()}</p>`;
     results += `<p>Federal Tax: $${federalTax.toFixed(2)}</p>`;
     results += `<p>Connecticut State Tax: $${stateTax.toFixed(2)}</p>`;
-    results += `<p><strong>Combined Effective Tax Rate: $${combinedEffectiveTaxRate.toFixed(2)}%</strong></p>`;
+    results += `<p><strong>Combined Effective Tax Rate: ${combinedEffectiveTaxRate}%</strong></p>`;
     results += `<p><strong>Total 401k + HSA Contributions: $${totalContributions.toFixed(2)}</strong></p>`;
     results += `<p><strong>Estimated Take-Home Pay: $${takeHome.toFixed(2)}</strong></p>`;
 
