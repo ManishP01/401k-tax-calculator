@@ -105,7 +105,7 @@ function calculateTaxes() {
     const taxableIncome = totalIncome - trad401k - hsaContribution;
 
     const federalTax = calculateFederalTax(taxableIncome, filingStatus);
-    const stateTax = calculateStateTax(taxableIncome);
+    const stateTax = calculateStateTax(taxableIncome, filingStatus);
     const totalTax = federalTax + stateTax;
 
     const takeHome = totalIncome - totalTax - trad401k - roth401k - hsaContribution;
