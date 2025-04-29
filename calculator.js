@@ -1,3 +1,4 @@
+console.log("calculator.js loaded");
 // Define tax brackets
 const federalBrackets = {
     "single": [
