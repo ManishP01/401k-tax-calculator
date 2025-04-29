@@ -31,7 +31,7 @@ function getMaxHsa(age, filingStatus) {
 
 
 // CT State Tax (Simplified)
-function calculateCTTax(taxableIncome, filingStatus) {
+function calculateStateTax(taxableIncome, filingStatus) {
     let tax = 0;
     if (filingStatus === "single") {
         if (taxableIncome <= 10000) tax = taxableIncome * 0.03;
